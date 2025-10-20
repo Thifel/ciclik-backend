@@ -1,5 +1,6 @@
-flask
-requests
-beautifulsoup4
-flask-cors
-gunicorn
+Flask==3.0.3
+flask-cors==4.0.1
+requests==2.32.3
+beautifulsoup4==4.12.3
+lxml==5.3.0
+gunicorn==21.2.0
