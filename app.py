@@ -5,6 +5,7 @@ import re
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse, urlunparse
+import certifi  # ✅ Novo: garante certificados atualizados
 
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
@@ -24,6 +25,9 @@ def make_session():
         ),
         "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
     })
+
+    # ✅ Força o uso do certificado correto (corrige o erro SSL)
+    sess.verify = certifi.where()
 
     retry = Retry(
         total=5,                # total de tentativas
@@ -73,8 +77,6 @@ def extrair_produtos(qr_url):
         viewstate = soup.find("input", {"name": "__VIEWSTATE"})
         eventvalidation = soup.find("input", {"name": "__EVENTVALIDATION"})
         if not viewstate or not eventvalidation:
-            # Às vezes a página do QR já vem com abas; tente fallback direto nas abas
-            # (seguimos adiante, mas podemos retornar vazio)
             return []
 
         # 2) Clica "Visualizar em Abas"
@@ -117,7 +119,6 @@ def extrair_produtos(qr_url):
 
             toggable = prod_table.find_next_sibling("table", class_="toggable")
             if toggable:
-                # variação: pega todos os pares label/span
                 for tr in toggable.find_all("tr"):
                     labels = tr.find_all("label")
                     spans = tr.find_all("span", class_="linha")
@@ -157,6 +158,5 @@ def index():
     return send_from_directory(".", "index.html")
 
 if __name__ == "__main__":
-    # Em produção no Render, prefira usar GUNICORN. Este bloco é útil localmente.
     port = int(os.environ.get("PORT", "8000"))
     app.run(host="0.0.0.0", port=port, debug=False)
